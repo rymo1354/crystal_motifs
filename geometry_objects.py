@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import sys
 import numpy as np
+from scipy.spatial import ConvexHull
 from helpers import CoordinateConverter
 from pymatgen.core.structure import Structure
 from helpers import HiddenPrints
@@ -98,9 +99,11 @@ class Edge3D(object):
     def __str__(self):
         return self.__repr__()
     
-    def __distance__(self):
-        # Length of the edge in Cartesian coordinates supplied
-        v = np.subtract(np.array(self.point1.coordinates), np.array(self.point2.coordinates))
+    def __length__(self, sig_figs=8):
+        # Length of the edge in Cartesian coordinates supplied; test this
+        c1 = np.round(self.point1.coordinates, sig_figs)
+        c2 = np.round(self.point2.coordinates, sig_figs)
+        v = np.subtract(c1, c2)
         return np.linalg.norm(v)
     
     def order_edge(self, other_edge, periodic=False):
@@ -176,12 +179,16 @@ class Face3D(object):
         else:
             return 'N-polygon'
     
-    def __vector_normal__(self):
-        # Vector normal to the Face's plane in Cartesian coordinates
-        vector1 = np.subtract(self.vertices[1].coordinates, self.vertices[0].coordinates)
-        vector2 = np.subtract(self.vertices[2].coordinates, self.vertices[1].coordinates)
-        normal_vector = np.cross(vector1, vector2)
-        return normal_vector
+    def __area__(self, sig_figs=8):
+        # Area of the convex face in Angstroms^2; Test this
+        area = 0
+        c0 = np.round(self.vertices[0].coordinates, sig_figs)
+        for i in range(len(self.vertices)-2): # All vertices in order
+            v1 = np.subtract(c0, np.round(self.vertices[i+1].coordinates, sig_figs))
+            v2 = np.subtract(c0, np.round(self.vertices[i+2].coordinates, sig_figs))
+            tri_area = np.multiply(np.linalg.norm(np.cross(v1, v2)), 0.5)
+            area += tri_area
+        return area
     
     def face_arrangements(self, face):
         arranged_faces = [] # All possible arrangements of vertices preserving connectivity
@@ -258,6 +265,15 @@ class Polyhedron3D(object):
     
     def __str__(self):
         return self.__repr__()
+    
+    def __volume__(self, sig_figs=8):
+        # Volume of the convex polyhedron in Angstroms^3; Test this
+        cs = []
+        for point in self.points:
+            c = np.round(point.coordinates, sig_figs)
+            cs.append(c)
+        ch = ConvexHull(cs)
+        return ch.volume
     
     def get_poly_type(self):
         # Can add in other classifications here, or not
