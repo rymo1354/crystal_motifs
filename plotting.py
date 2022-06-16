@@ -4,7 +4,7 @@ from sklearn.cluster import KMeans
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import matplotlib.patches as mpatches
 from matplotlib.collections import PatchCollection
-from geometry_objects import Point3D, Edge3D, Face3D
+from crystal_motifs.geometry_objects import Point3D, Edge3D, Face3D
 from sympy import Polygon
 import matplotlib.pyplot as plt
 from matplotlib import cm

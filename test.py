@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import unittest
-from helpers import CoordinateConverter, SymmetrizeStructure
+from crystal_motifs.helpers import CoordinateConverter, SymmetrizeStructure
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
-from geometry_objects import Point3D, Edge3D, Face3D
-from constructors import PMGPeriodicStructurePolyhedron3DConstructor
+from crystal_motifs.geometry_objects import Point3D, Edge3D, Face3D
+from crystal_motifs.constructors import PMGPeriodicStructurePolyhedron3DConstructor
 from pymatgen.core.structure import Structure
 from pymatgen.analysis.local_env import CrystalNN
 
