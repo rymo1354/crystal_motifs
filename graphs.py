@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import sys
-from geometry_objects import Point3D, Edge3D, Face3D
+from crystal_motifs.geometry_objects import Point3D, Edge3D, Face3D
 from pymatgen.core.structure import Structure
 from pymatgen.core.periodic_table import Specie, Element
-from constructors import PMGPeriodicStructurePolyhedron3DConstructor
+from crystal_motifs.constructors import PMGPeriodicStructurePolyhedron3DConstructor
 import numpy as np
 
 class GraphNode(object):

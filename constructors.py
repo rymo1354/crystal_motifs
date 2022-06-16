@@ -2,8 +2,8 @@
 import sys
 import numpy as np
 from copy import deepcopy
-from geometry_objects import Point3D, Edge3D, Face3D, Polyhedron3D
-from helpers import CoordinateConverter
+from crystal_motifs.geometry_objects import Point3D, Edge3D, Face3D, Polyhedron3D
+from crystal_motifs.helpers import CoordinateConverter
 from scipy.spatial import ConvexHull
 
 class Face3DfromSimplicesConstructor(object):
@@ -13,19 +13,19 @@ class Face3DfromSimplicesConstructor(object):
         
     def check_forms_plane(self, three_coordinates):
         form_plane = True
-        units = np.round(np.array([np.divide(coord, self.vector_normalization(coord)) for coord in three_coordinates]), 
-                         self.sig_figs)
-        # Check if the three coordinates are on same line / are the same point, within sig_figs
-        # Check to make sure no points are equal to zero
-        if len(np.unique(units, axis=0)) == 1 or len(np.unique(three_coordinates, axis=0)) == 1: 
+        if len(np.unique(three_coordinates, axis=0)) < 3: # Some points are the same point
             form_plane = False
-        return form_plane
+            return form_plane
+        else:
+            vector1 = np.absolute(np.subtract(three_coordinates[0], three_coordinates[1]))
+            vector2 = np.absolute(np.subtract(three_coordinates[0], three_coordinates[2]))
+            norm_factor = np.multiply(np.linalg.norm(vector1), np.linalg.norm(vector2))
+            if np.arccos(np.divide(np.dot(vector1, vector2), norm_factor)) == 0: # No angle between two vectors, forms line
+                form_plane = False
+            return form_plane
     
     def vector_normalization(self, vector):
-        if np.array_equal(vector, np.array([0, 0, 0])):
-            return 1 # Avoid np errors with dividing by 0
-        else:
-            return np.linalg.norm(vector)
+        return np.linalg.norm(vector)
         
     def coplanar_coord(self, plane_coords, coord):
         coplanar = False

@@ -2,9 +2,9 @@
 import sys
 import numpy as np
 from scipy.spatial import ConvexHull
-from helpers import CoordinateConverter
+from crystal_motifs.helpers import CoordinateConverter
 from pymatgen.core.structure import Structure
-from helpers import HiddenPrints
+from crystal_motifs.helpers import HiddenPrints
 
 class Point3D(object):    
     def __init__(self, coordinates, parent_structure=None, index=None, image_from_index=np.array([0, 0, 0])):
