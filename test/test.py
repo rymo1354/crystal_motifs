@@ -100,7 +100,7 @@ class TestFace3D(unittest.TestCase):
         self.face4 = Face3D([self.pb.point2, self.pb.point1, self.pb.point3])
     
     def test_get_shape(self):
-        self.assertEqual(['triangle', 'triangle', 'triangle'], [self.face1.shape, self.face2.shape, self.face3.shape])
+        self.assertEqual(['3-sided polygon', '3-sided polygon', '3-sided polygon'], [self.face1.shape, self.face2.shape, self.face3.shape])
     
     def test_order_face(self):
         for point_ind, point in enumerate(self.face1.vertices):
@@ -148,10 +148,10 @@ class TestPolyhedron3DConstructor(unittest.TestCase):
         self.polyb = PolyhedronBuilder()
         
     def test_shapes(self):
-        self.assertEqual(self.polyb.ti_octahedron.poly_type, 'octahedron')
-        self.assertEqual(self.polyb.ce_cube.poly_type, 'hexahedron')
-        self.assertEqual(self.polyb.sym_rattled_ce_cube.poly_type, 'hexahedron') # Expected behavior when symmetrized
-        self.assertNotEqual(self.polyb.rattled_ce_non_cube.poly_type, 'hexahedron') # Unexpected behavior when not symmetrized
+        self.assertEqual(self.polyb.ti_octahedron.poly_type, '8-sided polyhedron')
+        self.assertEqual(self.polyb.ce_cube.poly_type, '6-sided polyhedron')
+        self.assertEqual(self.polyb.sym_rattled_ce_cube.poly_type, '6-sided polyhedron') # Expected behavior when symmetrized
+        self.assertNotEqual(self.polyb.rattled_ce_non_cube.poly_type, '6-sided polyhedron') # Unexpected behavior when not symmetrized
         
     ### Could add more tests to this, but is probably sufficient for now ###
     

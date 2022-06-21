@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 import sys
 import numpy as np
+from math import isclose
 from copy import deepcopy
 from crystal_motifs.geometry_objects import Point3D, Edge3D, Face3D, Polyhedron3D
 from crystal_motifs.helpers import CoordinateConverter
 from scipy.spatial import ConvexHull
+from scipy.spatial.qhull import QhullError
 
 class Face3DfromSimplicesConstructor(object):
     def __init__(self, sig_figs=1):
@@ -17,10 +19,11 @@ class Face3DfromSimplicesConstructor(object):
             form_plane = False
             return form_plane
         else:
-            vector1 = np.absolute(np.subtract(three_coordinates[0], three_coordinates[1]))
-            vector2 = np.absolute(np.subtract(three_coordinates[0], three_coordinates[2]))
+            vector1 = np.subtract(three_coordinates[0], three_coordinates[1])
+            vector2 = np.subtract(three_coordinates[0], three_coordinates[2])
             norm_factor = np.multiply(np.linalg.norm(vector1), np.linalg.norm(vector2))
-            if np.arccos(np.divide(np.dot(vector1, vector2), norm_factor)) == 0: # No angle between two vectors, forms line
+            angle = np.arccos(np.divide(np.dot(vector1, vector2), norm_factor))
+            if isclose(angle, 0) or isclose(angle, np.pi): # No angle between two vectors, forms line
                 form_plane = False
             return form_plane
     
@@ -30,14 +33,14 @@ class Face3DfromSimplicesConstructor(object):
     def coplanar_coord(self, plane_coords, coord):
         coplanar = False
         if self.check_forms_plane(plane_coords) == False:
-            print("Points %s cannot form plane" % plane_coords)
-            sys.exit(1)
+            pass # No current check for coplanar if plane_coords do not form a plane
         else:
             distances = [self.get_distance(plane_coord, coord) for plane_coord in plane_coords]
             planes_coord_ind = distances.index(max(distances))
             plane_vector = self.get_plane_vector(plane_coords, planes_coord_ind)
             normal_component = np.dot(plane_vector, np.subtract(plane_coords[planes_coord_ind], coord))
-            if np.round(np.abs(normal_component), self.sig_figs) == 0:
+            if np.round(np.abs(normal_component), self.sig_figs) == 0: # Tolerance to determine coplanar points
+            # if isclose(np.round(normal_component, 4), 0): # To determine if in same plane
                 coplanar = True
         return coplanar
     
@@ -53,7 +56,6 @@ class Face3DfromSimplicesConstructor(object):
     
     def get_plane_vector(self, coords_in_plane, coords_point_ind):
         all_inds = [i for i in range(len(coords_in_plane)) if i != coords_point_ind]
-        
         vector1 = np.subtract(coords_in_plane[coords_point_ind], coords_in_plane[all_inds[0]])
         vector2 = np.subtract(coords_in_plane[coords_point_ind], coords_in_plane[all_inds[1]])
         vector_normal = np.cross(vector1, vector2)
@@ -179,14 +181,31 @@ class PMGPeriodicStructurePolyhedron3DConstructor:
         center_point = self.get_center_point(structure, center_site_index, center_image)
         neighbor_points = self.get_points(structure, center_site_index, center_image)
         neighbor_coordinates = [n.coordinates for n in neighbor_points]
-        
-        ch = ConvexHull(neighbor_coordinates) # still use this for now
-        ffsc = Face3DfromSimplicesConstructor(self.sig_figs) # for numerical stability
-        refaced_simplices = ffsc.get_true_faces(ch.simplices, ch.points)
-        
-        edges = self.get_edges(refaced_simplices, neighbor_points)
-        faces = self.get_faces(refaced_simplices, neighbor_points)
-        polyhedron = Polyhedron3D(neighbor_points, edges, faces, center_point)
+
+        if len(neighbor_points) == 0: # no nearest neighbors found
+            polyhedron = Polyhedron3D([], [], [], center_point)
+        elif len(neighbor_points) == 1: # one neighbor found
+            polyhedron = Polyhedron3D(neighbor_points, [], [], center_point)
+        elif len(neighbor_points) == 2: # two neighbors found
+            edge = Edge3D(neighbor_points[0], neighbor_points[1])
+            polyhedron = Polyhedron3D(neighbor_points, [edge], [], center_point)
+        elif len(neighbor_points) == 3: # three neighbors found; check if line?
+            edge1 = Edge3D(neighbor_points[0], neighbor_points[1])
+            edge2 = Edge3D(neighbor_points[1], neighbor_points[2])
+            edge3 = Edge3D(neighbor_points[2], neighbor_points[0])
+            face = Face3D(neighbor_points)
+            polyhedron = Polyhedron3D(neighbor_points, [edge1, edge2, edge3], [face], center_point)
+        else:
+            ffsc = Face3DfromSimplicesConstructor(self.sig_figs) # for numerical stability
+            try: 
+                ch = ConvexHull(neighbor_coordinates) # still use this for now
+                refaced_simplices = ffsc.get_true_faces(ch.simplices, ch.points)
+            except QhullError: # if the points form a plane rather than a convex hull
+                simplices = np.array([np.array([i, i+1, i+2]) for i in range(len(neighbor_points)-2)])
+                refaced_simplices = ffsc.get_true_faces(simplices, neighbor_coordinates)
+            edges = self.get_edges(refaced_simplices, neighbor_points)
+            faces = self.get_faces(refaced_simplices, neighbor_points)
+            polyhedron = Polyhedron3D(neighbor_points, edges, faces, center_point)
         
         return polyhedron
     
