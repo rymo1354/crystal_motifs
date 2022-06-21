@@ -164,20 +164,7 @@ class Face3D(object):
         return self.__repr__()
     
     def __shape__(self):
-        if len(self.vertices) == 3:
-            return 'triangle'
-        elif len(self.vertices) == 4:
-            return 'quadrilateral'
-        elif len(self.vertices) == 5:
-            return 'pentagon'
-        elif len(self.vertices) == 6:
-            return 'hexagon'
-        elif len(self.vertices) == 7:
-            return 'heptagon'
-        elif len(self.vertices) == 8:
-            return 'octagon'
-        else:
-            return 'N-polygon'
+        return '%s-sided polygon' % str(len(self.edges))
     
     def __area__(self, sig_figs=8):
         # Area of the convex face in Angstroms^2; Test this
@@ -276,27 +263,17 @@ class Polyhedron3D(object):
         return ch.volume
     
     def get_poly_type(self):
-        # Can add in other classifications here, or not
-        if len(self.faces) == 4:
-            return 'tetrahedron'
-        elif len(self.faces) == 5:
-            return 'pentahedron'
-        elif len(self.faces) == 6:
-            return 'hexahedron'
-        elif len(self.faces) == 7:
-            return 'heptahedron'
-        elif len(self.faces) == 8:
-            return 'octahedron'
-        elif len(self.faces) == 9:
-            return 'enneahedron'
-        elif len(self.faces) == 10:
-            return 'decahedron'
-        elif len(self.faces) == 11:
-            return 'hendecahedron'
-        elif len(self.faces) == 12:
-            return 'dodecahedron'
+        if len(self.faces) == 0:
+            if len(self.points) == 2:
+                return 'Coordinating edge'
+            elif len(self.points) == 1:
+                return 'Coordinating point'
+            else:
+                return 'Nothing coordinating'
+        elif len(self.faces) == 1:
+            return self.faces[0].__shape__()
         else:
-            return 'N-sided polyhedron'
+            return '%s-sided polyhedron' % str(len(self.faces))
             
     def shared_points(self, other_polyhedron, periodic=False):
         with self.hp:

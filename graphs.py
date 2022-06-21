@@ -86,7 +86,7 @@ class GraphGenerator(object):
                         polyhedron = self.poly_generator.polyhedron_constructor(structure, indice)
                         polyhedrons.append(polyhedron)
                 elif all(isinstance(x, Element) for x in species):
-                    indices = [i for i in range(len(structure)) if structure[i].element in species]
+                    indices = [i for i in range(len(structure)) if structure[i].specie in species]
                     for indice in indices:
                         polyhedron = self.poly_generator.polyhedron_constructor(structure, indice)
                         polyhedrons.append(polyhedron)
