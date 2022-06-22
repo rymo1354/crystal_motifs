@@ -126,7 +126,11 @@ class PMGPeriodicStructurePolyhedron3DConstructor:
         return self.__repr__()
         
     def get_points(self, structure, center_site_index, center_image=np.array([0., 0., 0.])):
-        nn = self.nn_finder.get_nn_info(structure, center_site_index)
+        try:
+            nn = self.nn_finder.get_nn_info(structure, center_site_index)
+        except ValueError: # Issue with nearest neighbor finder, often oxidation state problem
+            print('Check oxidation states on structure')
+            nn = []
         neighbor_points = []
         for i in range(len(nn)):
             cartesian_coordinates = self.cc.fractional_to_cartesian(np.add(nn[i]['site'].frac_coords, center_image), 

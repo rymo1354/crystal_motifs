@@ -35,10 +35,9 @@ class GraphEdge(object):
         return self.__repr__()
 
 class GraphGenerator(object):
-    def __init__(self, graph_type, nn_finder, sig_figs=1, **kwargs):
+    def __init__(self, nn_finder, sig_figs=1, **kwargs):
         # High default sig_figs tolerance (only compared to single sig fig)
         # This results in generally good performance for rattled structures
-        self.graph_type = graph_type
         self.poly_generator = PMGPeriodicStructurePolyhedron3DConstructor(nn_finder, sig_figs, **kwargs)
         
     def subset_check(self, check_connectors, check_against_connectors, periodic=False):
@@ -131,14 +130,16 @@ class GraphGenerator(object):
         
         return all_nodes_edges_dct
     
-    def generate_complete_graph(self, structure, species=None, indices=None, **kwargs):
-        ### specify **kwargs for self.graph_type
+    def generate_complete_graph(self, structure, graph, species=None, indices=None, **kwargs):
+        ### specify **kwargs for graph passed
         ### specify either a list of pymatgen Species objects to build polyhedrons for, or indices of these sites
         ### get graph of shared Point3Ds, Edge3Ds and Face3Ds between polyhedrons of a structure and species/indices
         polyhedrons = self.get_polyhedrons(structure, species, indices, **kwargs)        
         all_nodes_edges_dct = self.get_nodes_edges_dct(polyhedrons)
-        complete_graph = self.graph_type(**kwargs)
+        complete_graph = graph(**kwargs)
         for node_pair in list(all_nodes_edges_dct.keys()):
+            complete_graph.add_node(node_pair[0])
+            complete_graph.add_node(node_pair[1])
             for connector_type in list(all_nodes_edges_dct[node_pair]):
                 for graph_edge in all_nodes_edges_dct[node_pair][connector_type]:
                     complete_graph.add_edge(node_pair[0], node_pair[1], graph_edge)
