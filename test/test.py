@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import unittest
-from crystal_motifs.helpers import CoordinateConverter, SymmetrizeStructure
+from crystal_motifs.helpers import CoordinateConverter, SymmetrizeStructure, MolecularStructure
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from crystal_motifs.geometry_objects import Point3D, Edge3D, Face3D
@@ -129,6 +129,8 @@ class PolyhedronBuilder(object):
         self.cubic_perovskite.add_oxidation_state_by_element({'Ca': 2, 'Ti': 4, 'O': -2})
         self.fluorite = Structure.from_file('test_poscars/mp-20194_CeO2_POSCAR.txt')
         self.fluorite.add_oxidation_state_by_element({'Ce': 4, 'O': -2})
+        self.organic_perovskite_obj = MolecularStructure(Structure.from_file('test_poscars/mp-995214_MAPbI3_POSCAR.txt'))
+        self.organic_perovskite = self.organic_perovskite_obj.molecular_structure
         
         self.rattled_fluorite = Structure.from_file('test_poscars/rattled_mp-20194_CeO2_POSCAR.txt')
         self.rattled_fluorite.add_oxidation_state_by_element({'Ce': 4, 'O': -2})
@@ -142,6 +144,7 @@ class PolyhedronBuilder(object):
         self.ti_cubic_octahedron = self.constructor.polyhedron_constructor(self.cubic_perovskite, 1)
         self.rattled_ce_non_cube = self.constructor.polyhedron_constructor(self.rattled_fluorite, 0)
         self.sym_rattled_ce_cube = self.constructor.polyhedron_constructor(self.sym_rattled_fluorite, 0)
+        self.pb_octahedron = self.constructor.polyhedron_constructor(self.organic_perovskite, 0)
         
 class TestPolyhedron3DConstructor(unittest.TestCase):
     def setUp(self):
@@ -219,6 +222,15 @@ class TestPolyhedron3D(unittest.TestCase):
         self.assertEqual(len(shared_cubic_perovskite), 0) # no faces shared in periodic space by the octahedron
         self.assertEqual(len(shared_fluorite), 0) # no faces shared in periodic space by the high-sym cube
         self.assertEqual(len(shared_sr_fluorite), 0) # no faces shared in periodic space by the lower sym cube
+
+class TestMolecularStructure(unittest.TestCase):
+    def setUp(self):
+        self.polyb = PolyhedronBuilder()
+
+    def test_molecules(self):
+        print(self.polyb.organic_perovskite, self.polyb.organic_perovskite_obj.formulas_dct)
+        self.assertEqual(len(self.polyb.organic_perovskite), 20) # MolecularStructure has DummySpecies surrogates for MA sites
+        self.assertEqual(len(self.polyb.organic_perovskite_obj.formulas_dct), 1) # Only one DummySpecies (Z0) for this structure
     
 if __name__ == '__main__':
     unittest.main()
