@@ -1,9 +1,8 @@
+#!/usr/bin/env python
 import os
 import argparse 
 
-# Make this compatible with the submission scripts (add in additional arguments)
-
-def write(nodes, cores, time, out, alloc, script, directory, write):
+def write(nodes, cores, time, out, alloc, script, directory, write, unparsable, anions):
     writelines = '#!/bin/bash' + '\n'
     writelines += '#SBATCH -J ' + out + '\n'
     writelines += '#SBATCH --time=' + str(time) + ':00:00' + '\n'
@@ -20,7 +19,15 @@ def write(nodes, cores, time, out, alloc, script, directory, write):
         writelines += '#SBATCH --partition=long\n'
     else:
         writelines += '#SBATCH --partition=standard\n'
-    writelines +='python ' + script + ' -d ' + directory + ' -w ' + write + '\n'
+    writelines +='python ' + script + ' -d ' + directory + ' -w ' + write
+    if unparsable is True and anions is True:
+        writelines += ' ' + '-c' + ' ' + '-a' + '\n'
+    elif unparsable is False and anions is True:
+        writelines += ' ' + '-a' + '\n'
+    elif unparsable is True and anions is False:
+        writelines += ' ' + '-c' + '\n'
+    else:
+        writelines += '\n'
     writelines +='exit 0'+'\n'
 
     with open('submit.sh', 'w') as f:
@@ -45,8 +52,10 @@ if __name__ == '__main__':
                         type = str, required = True)
     parser.add_argument('-w', '--write_file_name', help = '.json written to',
                         type = str, required = True)
+    parser.add_argument('-cu', '--consider_unparsable', help='Consider unparsable files; default = False', action='store_true')
+    parser.add_argument('-aab', '--anions_AB', help='Anions assigned to A/B sites; default = False', action='store_true')
     args = parser.parse_args()
 
     write(args.nodes, args.cores, args.time, args.outfile, args.allocation,
-          args.script, args.directory, args.write_file_name)
+          args.script, args.directory, args.write_file_name, args.consider_unparsable, args.anions_AB)
     os.system('sbatch submit.sh')
