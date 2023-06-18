@@ -3,7 +3,7 @@
 import sys
 from crystal_motifs.geometry_objects import Point3D, Edge3D, Face3D
 from pymatgen.core.structure import Structure
-from pymatgen.core.periodic_table import Specie, Element
+from pymatgen.core.periodic_table import Species, DummySpecies, DummySpecie, Specie, Element
 from crystal_motifs.constructors import PMGPeriodicStructurePolyhedron3DConstructor
 import numpy as np
 
@@ -77,29 +77,23 @@ class GraphGenerator(object):
     
     def get_polyhedrons(self, structure, species=None, indices=None, **kwargs):
         polyhedrons = []
-        if type(structure) == Structure: # check that a PMG structure object is passed
-            if species != None:
-                if all(isinstance(x, Specie) for x in species):
-                    indices = [i for i in range(len(structure)) if structure[i].specie in species]
-                    for indice in indices:
-                        polyhedron = self.poly_generator.polyhedron_constructor(structure, indice)
-                        polyhedrons.append(polyhedron)
-                elif all(isinstance(x, Element) for x in species):
-                    indices = [i for i in range(len(structure)) if structure[i].specie in species]
-                    for indice in indices:
-                        polyhedron = self.poly_generator.polyhedron_constructor(structure, indice)
-                        polyhedrons.append(polyhedron)
-                else:
-                    print('Incorrect species; must be list of pmg.core.periodic_table Species or Element types')
-                    sys.exit(1)
-            elif indices != None:
-                if all(isinstance(x, int) and x < len(structure) for x in indices):
-                    for indice in indices:
-                        polyhedron = self.poly_generator.polyhedron_constructor(structure, indice)
-                        polyhedrons.append(polyhedron)
-            else:
-                print('Incorrect indices; must be list of integers less than the length of the Structure object')
-                sys.exit(1)
+        if type(structure) == Structure and species != None and indices == None: # check that a PMG structure object is passed
+            indices = []
+            for i in range(len(structure)):
+                site_species = structure[i].specie
+                if isinstance(site_species, (DummySpecies, DummySpecie, Specie, Species, Element)) and site_species in species:
+                    indices.append(i)
+            for indice in indices:
+                polyhedron = self.poly_generator.polyhedron_constructor(structure, indice)
+                polyhedrons.append(polyhedron)
+        elif type(structure) == Structure and indices != None:
+            for indice in indices:
+                if isinstance(indice, int) and indice < len(structure):
+                    polyhedron = self.poly_generator.polyhedron_constructor(structure, indice)
+                    polyhedrons.append(polyhedron)
+        else:
+            print('Must provide pmg species or structure indices for polyhedron construction')
+            sys.exit(1)
         return polyhedrons
         
     def get_nodes_edges_dct(self, polyhedrons):
