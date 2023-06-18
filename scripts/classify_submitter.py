@@ -19,19 +19,24 @@ def write(nodes, cores, time, out, alloc, script, directory, write, unparsable, 
         writelines += '#SBATCH --partition=long\n'
     else:
         writelines += '#SBATCH --partition=standard\n'
-    writelines +='python ' + script + ' -d ' + directory + ' -w ' + write
-    if unparsable is True and anions is True:
-        writelines += ' ' + '-c' + ' ' + '-a' + '\n'
-    elif unparsable is False and anions is True:
-        writelines += ' ' + '-a' + '\n'
-    elif unparsable is True and anions is False:
-        writelines += ' ' + '-c' + '\n'
-    else:
-        writelines += '\n'
-    writelines +='exit 0'+'\n'
+    __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+    script_location = os.path.join(__location__, script)
+    if os.path.exists(script_location):
+        writelines +='python ' + script_location + ' -d ' + directory + ' -w ' + write
+        if unparsable is True and anions is True:
+            writelines += ' ' + '-c' + ' ' + '-a' + '\n'
+        elif unparsable is False and anions is True:
+            writelines += ' ' + '-a' + '\n'
+        elif unparsable is True and anions is False:
+            writelines += ' ' + '-c' + '\n'
+        else:
+            writelines += '\n'
+        writelines +='exit 0'+'\n'
 
-    with open('submit.sh', 'w') as f:
-        f.write(writelines)
+        with open('submit.sh', 'w') as f:
+            f.write(writelines)
+    else:
+        print('%s not found at %s' % (script, __location__))
 
 if __name__ == '__main__':
 
