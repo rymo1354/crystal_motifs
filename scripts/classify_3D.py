@@ -1,27 +1,23 @@
 #!/usr/bin/env python
 import json
-from scipy.spatial.qhull import QhullError
+import os
+import xml
+import sys
+import numpy as np
+import functools
+import argparse
+from itertools import combinations
 from pymatgen.core.structure import Structure
-from pymatgen.core.composition import Composition
-from pymatgen.core.periodic_table import DummySpecies, Species, Specie, Element
+from pymatgen.io.vasp.outputs import Vasprun
+from pymatgen.core.periodic_table import DummySpecies
 from pymatgen.analysis.local_env import CrystalNN, BrunnerNN_relative
 from networkx import MultiGraph
 from crystal_motifs.graphs import GraphGenerator
 from crystal_motifs.geometry_objects import Point3D
-from tqdm import tqdm
 from time import process_time, time
 import multiprocessing as mp
 from concurrent.futures import ProcessPoolExecutor
-import numpy as np
-import functools
-import argparse
 from crystal_motifs.helpers import HiddenPrints, MolecularStructure
-from pathlib import Path
-import os
-import xml
-import sys
-from pymatgen.io.vasp.outputs import Vasprun
-from pymatgen.core.structure import Structure
 
 def argument_parser():
     parser = argparse.ArgumentParser()
@@ -79,6 +75,9 @@ def species_mapping(unique_species, anions_ab):
         if split == 1:
             lst1.append([lst[0]])
             lst2.append([lst[1]])
+        elif split >= 9:
+            print('Too many possible A- and B-site cations to consider; exiting') #combinations won't work
+            sys.exit(1)
         else:
             s_indices = ''.join([str(i) for i in range(len(lst))])
             while split >= 0.5*len(lst):

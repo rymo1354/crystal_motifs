@@ -3,12 +3,9 @@ import os, sys
 import numpy as np
 import re
 from copy import deepcopy
-from pymatgen.core.structure import Structure
 from pymatgen.core.structure import Molecule
 from pymatgen.core.periodic_table import Element, Species, DummySpecies
 from pymatgen.core.sites import PeriodicSite
-from pymatgen.core.composition import Composition
-from pymatgen.io.ase import AseAtomsAdaptor
 from pymatgen.io.babel import BabelMolAdaptor
 from pymatgen.analysis.local_env import CutOffDictNN
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
@@ -25,14 +22,6 @@ class HiddenPrints:
         sys.stdout.close()
         sys.stdout = self._original_stdout
         
-class CiftoStructure:
-    # Convert .cif file to pymatgen Structure object
-    pass
-
-class AseAtomstoStructure:
-    # Convert an ASE atoms object to pymatgen Structure object
-    pass
-
 class MolecularStructure(object):
     
     def __init__(self, structure,  organics=[Element('C'), Element('N'), Element('H')]):
