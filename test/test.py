@@ -228,7 +228,6 @@ class TestMolecularStructure(unittest.TestCase):
         self.polyb = PolyhedronBuilder()
 
     def test_molecules(self):
-        print(self.polyb.organic_perovskite, self.polyb.organic_perovskite_obj.formulas_dct)
         self.assertEqual(len(self.polyb.organic_perovskite), 20) # MolecularStructure has DummySpecies surrogates for MA sites
         self.assertEqual(len(self.polyb.organic_perovskite_obj.formulas_dct), 1) # Only one DummySpecies (Z0) for this structure
     
