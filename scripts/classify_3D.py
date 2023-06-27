@@ -68,6 +68,10 @@ def species_mapping(unique_species, anions_ab):
     anions = [s for s in unique_species if s.oxi_state < 0]
     cations = [s for s in unique_species if s.oxi_state > 0]
 
+    if len(anions) == 0 or len(cations) == 0: # no oxidation states automatically assigned, guess cations & anions
+        cations = [s for s in unique_species if np.all(np.array([np.sign(oxi) for oxi in s.element.oxidation_states]) == 1)]
+        anions = [s for s in unique_species if s not in cations]
+
     def get_mappings(lst):
         lst1 = []
         lst2 = []
@@ -156,8 +160,9 @@ def check_3D_perovskite(cmpd, graph, a_species, b_species):
                 is_3d_perovskite = False
                 break
         else:
-            print('Node species not in the lists of A and B-site species passed')
-            sys.exit(1)
+            print('%s: Node species %s not in the lists of A and B-site species passed' % (cmpd, str(node_specie)))
+            is_3d_perovskite = False
+            break
 
     return is_3d_perovskite
 
@@ -177,17 +182,20 @@ def classifier(anions_ab, path):
     # Get structure and add oxidation states
     struct = Structure.from_file(path) 
     mso = MolecularStructure(struct) # check if molecules can be identified in the structure & add oxidation states
+    unique_species = list(np.unique(mso.molecular_structure.species))
     
     # Designate NNfinder to be used
     if len(mso.structure) == len(mso.molecular_structure): # no molecules identified
         gg = GraphGenerator(CrystalNN, 8, cation_anion=True)
-        sp_dct = {} 
+        sp_dct = {}
+    elif np.all(np.array([s.oxi_state for s in unique_species]) == 0) is True: # can't be charge-balanced
+        gg = GraphGenerator(BrunnerNN_relative)
+        sp_dct = {}
     else:
         gg = GraphGenerator(BrunnerNN_relative) # works for DummySpecies when molecules were identified
         sp_dct = mso.formulas_dct
 
     # Get the species assignments and generate the graph
-    unique_species = list(np.unique(mso.molecular_structure.species))
     A_sites, B_sites, X_sites = species_mapping(unique_species, anions_ab)
     graph_species = [s for s in unique_species if s not in X_sites] # X_sites are vertices, edges and faces, to be nodes in graph
     cmpd = mso.structure.composition.reduced_formula # return this, without DummySpecies  
