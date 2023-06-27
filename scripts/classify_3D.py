@@ -110,19 +110,20 @@ def check_3D_perovskite(cmpd, graph, a_species, b_species):
     is_3d_perovskite = True
     nodes = list(graph.nodes)
     for node in nodes:
-        if node.polyhedron.center.specie in b_species:
+        node_specie = node.polyhedron.center.specie
+        if node_specie in b_species:
             # 1. Check that all B-site nodes are octahedrons with only triangular faces
             if node.polyhedron.poly_type == 'Nothing coordinating':
-                print('%s: B-site(s) with no neighbors; check oxidation states and/or structure' % cmpd)
+                print('%s: %s B-site(s) with no neighbors; check oxidation states and/or structure' % (cmpd, str(node_specie)))
                 is_3d_perovskite = False
                 break
             if node.polyhedron.poly_type != '8-sided polyhedron':
-                print('%s: Not all B-site nodes are octahedrons' % cmpd)
+                print('%s: Not all %s B-site nodes are octahedrons' % (cmpd, str(node_specie)))
                 is_3d_perovskite = False
                 break
             face_shapes = np.array([face.shape for face in node.polyhedron.faces])
             if np.all(face_shapes == '3-sided polygon') is False:
-                print('%s: Not all B-site faces are triangles' % cmpd)
+                print('%s: Not all %s  B-site faces are triangles' % (cmpd, str(node_specie)))
                 is_3d_perovskite = False
                 break
             # 2. Check that all B-site nodes share six Point3D edges
@@ -136,26 +137,26 @@ def check_3D_perovskite(cmpd, graph, a_species, b_species):
                         all_edge_point3Ds += edges_point3Ds
             all_point3Ds = np.all(np.array(all_edge_point3Ds) == True)
             if all_point3Ds is False:  # Not all edges are Point3Ds
-                print('%s: Not all B-site graph edges are Point3Ds' % cmpd)
+                print('%s: Not all %s B-site graph edges are Point3Ds' % (cmpd, str(node_specie)))
                 is_3d_perovskite = False
                 break
             if len(all_edge_point3Ds) != 6:  # Six graph edges shared
-                print('%s: Not all B-site octahedrons share exactly six Point3Ds' % cmpd)
+                print('%s: Not all %s B-site octahedrons share exactly six Point3Ds' % (cmpd, str(node_specie)))
                 is_3d_perovskite = False
                 break
 
-        elif node.polyhedron.center.specie in a_species: # if in a_species
+        elif node_specie in a_species: # if in a_species
             # 3. Check that all A-site nodes have between 8 and 12 coordinating neighbors
             if node.polyhedron.poly_type == 'Nothing coordinating':
-                print('%s: A-site(s) with no neighbors; check oxidation states and/or structure' % cmpd)
+                print('%s: %s A-site(s) with no neighbors; check oxidation states and/or structure' % (cmpd, str(node_specie)))
                 is_3d_perovskite = False
                 break
             if len(node.polyhedron.points) < 8 or len(node.polyhedron.points) > 12:
-                print('%s: A-site(s) with %s neighbors' % (cmpd, str(len(node.polyhedron.points))))
+                print('%s: %s A-site(s) with %s neighbors' % (cmpd, str(node_specie), str(len(node.polyhedron.points))))
                 is_3d_perovskite = False
                 break
         else:
-            print('Inappropriate nodes, improper species')
+            print('Node species not in the lists of A and B-site species passed')
             sys.exit(1)
 
     return is_3d_perovskite
